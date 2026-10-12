@@ -1,0 +1,337 @@
+
+<?php
+$harga_anak = 15000;
+$harga_dewasa = 25000;
+$error = "";
+$hasil = false;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nama = trim($_POST["nama"] ?? "");
+    $anak_input = $_POST["anak"] ?? "";
+    $dewasa_input = $_POST["dewasa"] ?? "";
+    $bayar_input = $_POST["bayar"] ?? "";
+
+    $anak = filter_var($anak_input, FILTER_VALIDATE_INT);
+    $dewasa = filter_var($dewasa_input, FILTER_VALIDATE_INT);
+    $bayar = filter_var($bayar_input, FILTER_VALIDATE_INT);
+
+    if (
+        $nama == "" ||
+        $anak === false || $dewasa === false ||
+        $bayar === false ||
+        $anak < 0 || $dewasa < 0 ||
+        $anak > 100 || $dewasa > 100 ||
+        $bayar < 0 ||
+        ($anak + $dewasa) == 0
+    ) {
+        $error = "Data pembelian tidak valid!";
+    } else {
+        $total_anak = $anak * $harga_anak;
+        $total_dewasa = $dewasa * $harga_dewasa;
+        $total = $total_anak + $total_dewasa;
+
+        if ($bayar < $total) {
+            $error = "Uang pembayaran kurang!";
+        } else {
+            $kembalian = $bayar - $total;
+            $tanggal = date("d-m-Y H:i");
+            $hasil = true;
+        }
+    }
+}
+
+function rupiah($angka) {
+    return "Rp" . number_format($angka, 0, ",", ".");
+}
+?>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pembelian Tiket Kolam Renang</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 25px 15px;
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 460px;
+    margin: 15px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px #003b6f40;
+}
+
+.header {
+    text-align: center;
+    color: #0077b6;
+}
+
+.icon {
+    font-size: 48px;
+}
+
+h1 {
+    font-size: 24px;
+    margin: 10px 0;
+}
+
+.header p {
+    color: #666;
+    font-size: 14px;
+}
+
+.harga {
+    background: #eaf8ff;
+    padding: 15px;
+    border-radius: 10px;
+    line-height: 1.9;
+    margin: 20px 0;
+    color: #005f8f;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 15px 0 7px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+input:focus {
+    outline: 2px solid #00a6e8;
+}
+
+button {
+    width: 100%;
+    padding: 13px;
+    margin-top: 22px;
+    border: none;
+    border-radius: 8px;
+    background: #0077b6;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #005f8f;
+}
+
+.error {
+    padding: 12px;
+    color: #b00020;
+    background: #ffe8e8;
+    border-radius: 8px;
+}
+
+.struk {
+    margin-top: 25px;
+    padding: 18px;
+    border: 2px dashed #00a878;
+    border-radius: 10px;
+    background: #f0fff8;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+}
+
+.struk h2 {
+    text-align: center;
+    color: #00804a;
+    font-size: 21px;
+}
+
+.struk .baris {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.struk .baris span:last-child {
+    text-align: right;
+}
+
+.total {
+    color: #00804a;
+    font-weight: bold;
+    font-size: 19px;
+}
+
+.lunas {
+    text-align: center;
+    padding: 10px;
+    background: #d7fbe8;
+    color: #007a42;
+    font-weight: bold;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #777;
+    font-size: 12px;
+}
+
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .container {
+        box-shadow: none;
+        margin: 0 auto;
+    }
+
+    form, .harga, .header, .footer,
+    .error, .no-print {
+        display: none !important;
+    }
+
+    .struk {
+        display: block;
+        margin-top: 0;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <div class="icon">🏊</div>
+        <h1>Tiket Kolam Renang</h1>
+        <p>Pesan tiket dan nikmati keseruannya!</p>
+    </div>
+
+    <div class="harga">
+        <strong>DAFTAR HARGA TIKET</strong><br>
+        👦 Anak-anak: <?= rupiah($harga_anak) ?><br>
+        🧑 Dewasa: <?= rupiah($harga_dewasa) ?>
+    </div>
+
+    <?php if ($error != ""): ?>
+        <div class="error">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" action="">
+        <label>Nama Pembeli</label>
+        <input type="text" name="nama"
+            placeholder="Masukkan nama pembeli"
+            value="<?= htmlspecialchars($_POST["nama"] ?? "") ?>"
+            maxlength="100" required>
+
+        <label>Jumlah Tiket Anak-anak</label>
+        <input type="number" name="anak" min="0" max="100"
+            value="<?= htmlspecialchars($_POST["anak"] ?? "0") ?>"
+            required>
+
+        <label>Jumlah Tiket Dewasa</label>
+        <input type="number" name="dewasa" min="0" max="100"
+            value="<?= htmlspecialchars($_POST["dewasa"] ?? "0") ?>"
+            required>
+
+        <label>Uang Pembayaran (Rp)</label>
+        <input type="number" name="bayar" min="0"
+            placeholder="Masukkan uang pembayaran"
+            value="<?= htmlspecialchars($_POST["bayar"] ?? "") ?>"
+            required>
+
+        <button type="submit">🎟️ Beli Tiket</button>
+    </form>
+
+    <?php if ($hasil): ?>
+    <div class="struk" id="struk">
+        <h2>STRUK PEMBELIAN</h2>
+        <p style="text-align:center">KOLAM RENANG CERIA</p>
+        <hr>
+
+        <div class="baris">
+            <span>Nama</span>
+            <span><?= htmlspecialchars($nama) ?></span>
+        </div>
+
+        <div class="baris">
+            <span>Tanggal</span>
+            <span><?= $tanggal ?></span>
+        </div>
+
+        <hr>
+
+        <div class="baris">
+            <span>Tiket anak</span>
+            <span><?= $anak ?> x <?= rupiah($harga_anak) ?></span>
+        </div>
+
+        <div class="baris">
+            <span>Tiket dewasa</span>
+            <span><?= $dewasa ?> x <?= rupiah($harga_dewasa) ?></span>
+        </div>
+
+        <div class="baris">
+            <span>Jumlah tiket</span>
+            <span><?= $anak + $dewasa ?> tiket</span>
+        </div>
+
+        <hr>
+
+        <div class="baris">
+            <span>Total harga</span>
+            <span><?= rupiah($total) ?></span>
+        </div>
+
+        <div class="baris">
+            <span>Uang bayar</span>
+            <span><?= rupiah($bayar) ?></span>
+        </div>
+
+        <div class="baris total">
+            <span>Kembalian</span>
+            <span><?= rupiah($kembalian) ?></span>
+        </div>
+
+        <div class="lunas">✓ PEMBAYARAN BERHASIL</div>
+
+        <p style="text-align:center">
+            Terima kasih telah berkunjung!<br>
+            Selamat berenang 😊
+        </p>
+
+        <button type="button" class="no-print"
+            onclick="window.print()">
+            🖨️ Cetak Struk
+        </button>
+    </div>
+    <?php endif; ?>
+
+    <div class="footer">
+        Aplikasi Tiket Kolam Renang &copy; 2026
+    </div>
+
+</div>
+</body>
+</html>
